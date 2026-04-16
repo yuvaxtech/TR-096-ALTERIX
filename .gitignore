@@ -1,0 +1,17 @@
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+.env
+venv/
+env/
+.venv/
+
+# macOS
+.DS_Store
+
+# Temporary scratch
+scratch.py
