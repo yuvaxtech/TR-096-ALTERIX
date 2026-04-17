@@ -225,15 +225,15 @@ else:
         """, unsafe_allow_html=True)
 
         highlighted = highlight_text(jd_source, findings)
+        safe_highlighted = highlighted.replace('\n', '<br>')
         st.markdown(f"""
-        <div style="font-family:'Outfit', sans-serif; font-weight:600; font-size:16px; margin-bottom:12px; color:var(--text-primary)">Highlighted Document Viewer</div>
-        <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px;
-                    padding: 24px; font-size: 15px; line-height: 1.9; white-space: pre-wrap; margin-bottom: 24px; color: var(--text-secondary);">
-        {highlighted}
-        </div>
+<div style="font-family:'Inter', sans-serif; font-weight:600; font-size:16px; margin-bottom:12px; color:var(--text-primary)">Highlighted Document Viewer</div>
+<div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; font-size: 15px; line-height: 1.9; margin-bottom: 24px; color: var(--text-secondary);">
+{safe_highlighted}
+</div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<p style='font-family:Outfit,sans-serif; font-weight:700; font-size:16px; margin-bottom:16px; color:var(--text-primary)'>Detailed Breakdowns</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-family:Inter,sans-serif; font-weight:700; font-size:16px; margin-bottom:16px; color:var(--text-primary)'>Detailed Breakdowns</p>", unsafe_allow_html=True)
         for f in findings:
             c = "var(--status-high-color)" if f["severity"] == "high" else ("var(--status-medium-color)" if f["severity"] == "medium" else "var(--status-low-color)")
             st.markdown(f"""
@@ -335,11 +335,11 @@ if "rewritten_jd" in st.session_state:
         safe_jd_copy = st.session_state["rewritten_jd"].replace('`', '\\`').replace('$', '\\$').replace('\\n', '\\n')
         components.html(f"""
             <button onclick="navigator.clipboard.writeText(`{safe_jd_copy}`); this.innerText='✅ Copied!';" 
-            style="width: 100%; box-sizing: border-box; padding: 10px 24px; background: #0066cc; color: white; border: none; border-radius: 10px; 
-            cursor: pointer; font-size: 15px; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, sans-serif; transition: transform 0.2s, opacity 0.2s;">
+            style="width: 100%; box-sizing: border-box; padding: 12px 24px; background: transparent; color: #00f3ff; border: 1px solid #00f3ff; border-radius: 6px; 
+            cursor: pointer; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: 'Inter', sans-serif; transition: all 0.3s ease; box-shadow: inset 0 0 10px rgba(0,243,255,0.1);">
             📋 Copy Text
             </button>
-            <style>button:hover {{transform: scale(1.02); opacity: 0.9;}} button:active {{transform: scale(0.98);}}</style>
+            <style>button:hover {{background: #00f3ff; color: #000; box-shadow: 0 0 20px rgba(0,243,255,0.6);}} button:active {{transform: scale(0.98);}}</style>
         """, height=60)
         
     with col_down:
@@ -490,19 +490,20 @@ if df_raw is not None:
         gender_df = df_result.groupby("gender").agg(applied=("applied", "sum"), hired=("hired", "sum")).reset_index()
         gender_df["hire_rate_pct"] = (gender_df["hired"] / gender_df["applied"] * 100).round(1)
 
-        colors = ["#007aff", "#34c759", "#ff9500", "#ff3b30", "#5856d6"] * 10
+        colors = ["#00f3ff", "#39ff14", "#ffea00", "#ff003c", "#b76eff"] * 10
         fig1 = go.Figure()
         fig1.add_trace(go.Bar(
             x=gender_df["gender"], y=gender_df["hire_rate_pct"],
-            marker=dict(color=colors[:len(gender_df)], line=dict(color="rgba(0,0,0,0.05)", width=1)),
+            marker=dict(color=colors[:len(gender_df)], line=dict(color="rgba(255,255,255,0.1)", width=1)),
             text=[f"{v}%" for v in gender_df["hire_rate_pct"]], textposition="outside",
-            textfont=dict(color="#1d1d1f", size=13, family="-apple-system, sans-serif"),
+            textfont=dict(color="#f0f4f8", size=13, family="'Inter', sans-serif"),
         ))
         fig1.update_layout(
+            template="plotly_dark",
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="-apple-system, sans-serif", color="#3a3a3c", size=12),
-            xaxis=dict(gridcolor="rgba(0,0,0,0.05)", title=demo_label),
-            yaxis=dict(gridcolor="rgba(0,0,0,0.05)", title=f"{target_label} (%)"),
+            font=dict(family="'Inter', sans-serif", color="#f0f4f8", size=12),
+            xaxis=dict(gridcolor="rgba(255,255,255,0.05)", title=demo_label),
+            yaxis=dict(gridcolor="rgba(255,255,255,0.05)", title=f"{target_label} (%)"),
             margin=dict(l=10, r=10, t=30, b=10), height=360, hovermode="x"
         )
         st.plotly_chart(fig1, use_container_width=True, theme=None)
@@ -512,22 +513,23 @@ if df_raw is not None:
         di_df["group"] = di_df["gender"] + (" · " + di_df["age_group"] if "age_group" in df_result.columns and demo_label == "Gender" else "")
         di_df = di_df.sort_values("disparate_impact")
 
-        bar_colors = ["#ff3b30" if v < 0.8 else "#34c759" for v in di_df["disparate_impact"]]
+        bar_colors = ["#ff003c" if v < 0.8 else "#39ff14" for v in di_df["disparate_impact"]]
 
         fig2 = go.Figure()
         fig2.add_trace(go.Bar(
             y=di_df["group"], x=di_df["disparate_impact"], orientation="h",
-            marker=dict(color=bar_colors, line=dict(color="rgba(0,0,0,0.05)", width=1)),
+            marker=dict(color=bar_colors, line=dict(color="rgba(255,255,255,0.1)", width=1)),
             text=[f"{v:.2f}" for v in di_df["disparate_impact"]], textposition="outside",
-            textfont=dict(color="#1d1d1f", size=12, family="-apple-system, sans-serif"),
+            textfont=dict(color="#f0f4f8", size=12, family="'Inter', sans-serif"),
             hovertemplate="<b>%{y}</b><br>Impact Score: %{x}<br><i>A score < 0.8 is considered biased.</i><extra></extra>"
         ))
-        fig2.add_vline(x=0.8, line_dash="dash", line_color="#ff9500", line_width=2,
-                        annotation_text=" 80% Threshold", annotation_font_color="#ff9500", annotation_font_size=12)
+        fig2.add_vline(x=0.8, line_dash="dash", line_color="#ffea00", line_width=2,
+                        annotation_text=" 80% Threshold", annotation_font_color="#ffea00", annotation_font_size=12)
         fig2.update_layout(
+            template="plotly_dark",
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="-apple-system, sans-serif", color="#3a3a3c", size=12),
-            xaxis=dict(gridcolor="rgba(0,0,0,0.05)", range=[0, 1.15], title="Disparate Impact Ratio"),
+            font=dict(family="'Inter', sans-serif", color="#f0f4f8", size=12),
+            xaxis=dict(gridcolor="rgba(255,255,255,0.05)", range=[0, 1.15], title="Disparate Impact Ratio"),
             yaxis=dict(gridcolor="rgba(0,0,0,0)"),
             margin=dict(l=10, r=40, t=10, b=10), height=max(320, len(di_df) * 35)
         )
@@ -541,7 +543,7 @@ if df_raw is not None:
 
         def highlight_di(val):
             try: 
-                return "background-color: rgba(255,77,109,0.2); color: #ff4d6d; font-weight: bold;" if float(val) < 0.8 else ""
+                return "background-color: rgba(255,0,60,0.2); color: #ff003c; text-shadow: 0 0 5px #ff003c; font-weight: bold;" if float(val) < 0.8 else ""
             except: return ""
         st.dataframe(display_df.style.map(highlight_di, subset=["Disparate Impact"]), use_container_width=True, height=350)
         
